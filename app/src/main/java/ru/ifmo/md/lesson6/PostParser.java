@@ -32,8 +32,8 @@ public class PostParser {
         return node.getNodeValue();
     }
 
-    public ArrayList<PostData> parse() throws IOException, SAXException, ParserConfigurationException {
-        ArrayList<PostData> postDataList = new ArrayList<PostData>();
+    public ArrayList<PostItem> parse() throws IOException, SAXException, ParserConfigurationException {
+        ArrayList<PostItem> postItemList = new ArrayList<PostItem>();
 
         DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
         DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
@@ -48,15 +48,15 @@ public class PostParser {
             Node node = nList.item(i);
             if (node.getNodeType() == Node.ELEMENT_NODE) {
                 Element el = (Element) node;
-                PostData pd = new PostData();
+                PostItem pd = new PostItem();
                 pd.setPostLink(getValue(LINK, el));
                 pd.setPostTitle(getValue(TITLE, el));
                 pd.setPostDate(getValue(PUB_DATE, el));
                 pd.setPostDescription(getValue(DESCRIPTION, el));
-                postDataList.add(pd);
+                postItemList.add(pd);
             }
         }
 
-        return postDataList;
+        return postItemList;
     }
 }

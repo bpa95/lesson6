@@ -10,20 +10,20 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 
-public class PostAdapter extends ArrayAdapter<PostItem> {
+public class FeedAdapter extends ArrayAdapter<FeedItem> {
     private Activity context;
-    private ArrayList<PostItem> posts;
+    private ArrayList<FeedItem> feeds;
     private int viewId;
 
-    public PostAdapter(Context context, int viewId, ArrayList<PostItem> posts) {
-        super(context, viewId, posts);
+    public FeedAdapter(Context context, int viewId, ArrayList<FeedItem> feeds) {
+        super(context, viewId, feeds);
         this.context = (Activity) context;
         this.viewId = viewId;
-        this.posts = posts;
+        this.feeds = feeds;
     }
 
     private static class ViewHolder {
-        TextView postTitleView;
+        TextView feedTitleView;
     }
 
     public View getView(int position, View convertView, ViewGroup parent) {
@@ -34,13 +34,13 @@ public class PostAdapter extends ArrayAdapter<PostItem> {
             convertView = inflater.inflate(viewId, null);
 
             viewHolder = new ViewHolder();
-            viewHolder.postTitleView = (TextView) convertView.findViewById(R.id.post_title);
+            viewHolder.feedTitleView = (TextView) convertView.findViewById(R.id.feed_title);
             convertView.setTag(viewHolder);
         } else {
             viewHolder = (ViewHolder) convertView.getTag();
         }
 
-        viewHolder.postTitleView.setText(posts.get(position).getPostTitle());
+        viewHolder.feedTitleView.setText(feeds.get(position).getFeedTitle());
 
         return convertView;
     }
