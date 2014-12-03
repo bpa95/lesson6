@@ -24,8 +24,8 @@
         </service>
 
         <provider
-            android:name="ru.ifmo.md.lesson6.SimpleFeedContentProvider"
-            android:authorities="URI"
+            android:name=".FeedContentProvider"
+            android:authorities="ru.ifmo.md.lesson6.provider.feed"
             android:enabled="true"
             android:exported="true" >
         </provider>

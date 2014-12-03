@@ -2,47 +2,68 @@ package ru.ifmo.md.lesson6;
 
 import android.app.Activity;
 import android.app.DialogFragment;
+import android.content.ContentResolver;
+import android.content.ContentUris;
+import android.content.ContentValues;
 import android.content.Intent;
+import android.database.Cursor;
+import android.database.CursorWrapper;
+import android.graphics.Color;
+import android.net.Uri;
 import android.os.Bundle;
+import android.provider.BaseColumns;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
+import android.widget.SimpleCursorAdapter;
 import android.widget.Toast;
 
 import java.util.ArrayList;
 
 
 public class MainActivity extends Activity implements AddFeedDialogFragment.NoticeDialogListener {
-    private ArrayList<FeedItem> feeds = new ArrayList<FeedItem>();
-    private FeedAdapter feedAdapter;
     private boolean del = false;
+    private SimpleCursorAdapter adapter;
+    private ListView listView;
+
+    final Uri CONTENT_URI = Feed.SimpleFeed.CONTENT_URI;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        FeedItem bash = new FeedItem("bash", getString(R.string.bash_feed_url));
-        feeds.add(bash);
+        Cursor cursor = getContentResolver().query(CONTENT_URI, null, null,
+                null, null);
+        startManagingCursor(cursor);
 
-        ListView listView = (ListView) findViewById(R.id.feed_list);
-        feedAdapter = new FeedAdapter(this, R.layout.feed_item, feeds);
-        listView.setAdapter(feedAdapter);
+        String from[] = { Feed.SimpleFeed.TITLE_NAME, Feed.SimpleFeed.URL_NAME };
+        int to[] = { android.R.id.text1, android.R.id.text2 };
+        adapter = new SimpleCursorAdapter(this,
+                android.R.layout.simple_list_item_2, cursor, from, to);
+
+        listView = (ListView) findViewById(R.id.feed_list);
+        listView.setAdapter(adapter);
+
         listView.setOnItemClickListener(contentShower);
     }
 
     private AdapterView.OnItemClickListener contentShower = new AdapterView.OnItemClickListener() {
         @Override
         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-            FeedItem data = feeds.get(position);
+            Cursor o = ((Cursor) adapter.getItem(position));
             if (del) {
-                feedAdapter.remove(data);
+                Uri uri = ContentUris.withAppendedId(Feed.SimpleFeed.CONTENT_URI, o.getLong(Feed.ID_COLUMN));
+                int cnt = getContentResolver().delete(uri, null, null);
                 del = false;
+                listView.setBackgroundColor(Color.WHITE);
+                Log.i("x", "delete, count = " + cnt);
             } else {
                 Intent feedViewIntent = new Intent(MainActivity.this, PostListActivity.class);
-                feedViewIntent.putExtra("link", data.getFeedLink());
+                feedViewIntent.putExtra("link", o.getString(Feed.URL_COLUMN));
                 startActivity(feedViewIntent);
             }
         }
@@ -68,9 +89,10 @@ public class MainActivity extends Activity implements AddFeedDialogFragment.Noti
         } else if (url.isEmpty()) {
             showToast(getString(R.string.empty_url));
         } else {
-            FeedItem newItem = new FeedItem(title, url);
-            feedAdapter.add(newItem);
-            feedAdapter.notifyDataSetChanged();
+            ContentValues cv = new ContentValues();
+            cv.put(Feed.SimpleFeed.TITLE_NAME, title);
+            cv.put(Feed.SimpleFeed.URL_NAME, url);
+            getContentResolver().insert(Feed.SimpleFeed.CONTENT_URI, cv);
         }
     }
 
@@ -80,6 +102,7 @@ public class MainActivity extends Activity implements AddFeedDialogFragment.Noti
 
         if (id == R.id.action_add_feed) {
             del = false;
+            listView.setBackgroundColor(Color.WHITE);
             DialogFragment dialogFragment = new AddFeedDialogFragment();
             dialogFragment.show(getFragmentManager(), "add_feed");
             return true;
@@ -87,9 +110,21 @@ public class MainActivity extends Activity implements AddFeedDialogFragment.Noti
 
         if (id == R.id.action_delete_feed) {
             showToast(getString(R.string.click_to_delete));
+            listView.setBackgroundColor(Color.rgb(255, 200, 200));
             del = true;
+            return true;
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (del) {
+            listView.setBackgroundColor(Color.WHITE);
+            del = false;
+        } else {
+            super.onBackPressed();
+        }
     }
 }
