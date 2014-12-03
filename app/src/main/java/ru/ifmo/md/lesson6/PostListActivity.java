@@ -11,10 +11,12 @@ import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 import java.io.IOError;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -65,19 +67,18 @@ public class PostListActivity extends Activity {
                 HttpURLConnection connection = (HttpURLConnection) url.openConnection();
                 connection.connect();
 
-                PostParser postParser = new PostParser(connection.getInputStream());
-                postItemList = postParser.parse();
+                InputStream is = connection.getInputStream();
+
+                postItemList = SAXXMLParser.parse(is);
+
+                if (postItemList == null) {
+                    postItemList = new ArrayList<PostItem>();
+                }
             } catch (MalformedURLException e) {
                 errorText = getString(R.string.malformed_url);
                 e.printStackTrace();
             } catch (IOException e) {
                 errorText = getString(R.string.check_internet);
-                e.printStackTrace();
-            } catch (ParserConfigurationException e) {
-                errorText = getString(R.string.unsupported_rss);
-                e.printStackTrace();
-            } catch (SAXException e) {
-                errorText = getString(R.string.unsupported_rss);
                 e.printStackTrace();
             } catch (Exception e) {
                 errorText = getString(R.string.unknown_error);
