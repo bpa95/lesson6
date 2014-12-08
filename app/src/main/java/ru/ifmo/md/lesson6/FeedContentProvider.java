@@ -63,8 +63,12 @@ public class FeedContentProvider extends ContentProvider {
 
         private void insertFeeds(SQLiteDatabase sqLiteDatabase) {
             ContentValues cv = new ContentValues();
-            cv.put(Feed.SimpleFeed.TITLE_NAME, "Bash");
-            cv.put(Feed.SimpleFeed.URL_NAME, "http://bash.im/rss/");
+            cv.put(Feed.SimpleFeed.TITLE_NAME, "BBC");
+            cv.put(Feed.SimpleFeed.URL_NAME, "http://feeds.bbci.co.uk/news/rss.xml");
+            sqLiteDatabase.insert(FEEDS_TABLE_NAME, null, cv);
+            cv.clear();
+            cv.put(Feed.SimpleFeed.TITLE_NAME, "Echo MSK");
+            cv.put(Feed.SimpleFeed.URL_NAME, "http://echo.msk.ru/interview/rss-fulltext.xml");
             sqLiteDatabase.insert(FEEDS_TABLE_NAME, null, cv);
         }
 

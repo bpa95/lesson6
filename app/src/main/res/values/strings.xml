@@ -4,8 +4,13 @@
     <string name="app_name">RSSreader</string>
     <string name="hello_world">Hello world!</string>
     <string name="action_add_feed">Add feed</string>
-    <string name="title_activity_post_view">PostViewActivity</string>
-    <string name="bash_feed_url">http://bash.im/rss/</string>
+    <string name="title_activity_post_view">Post</string>
+
+    <string name="bbc_feed_title">BBC</string>
+    <string name="bbc_feed_url">http://feeds.bbci.co.uk/news/rss.xml</string>
+    <string name="echo_msk_feed_title">Echo MSK</string>
+    <string name="echo_msk_feed_url">http://echo.msk.ru/interview/rss-fulltext.xml</string>
+    
     <string name="title_activity_main">Feeds</string>
     <string name="add">Add</string>
     <string name="cancel">Cancel</string>
