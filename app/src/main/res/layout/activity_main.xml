@@ -3,6 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:id="@+id/feed_list"
-    tools:context=".MainActivity">
+    tools:context=".MainActivity"
+    android:background="#ffffffff">
 
 </ListView>

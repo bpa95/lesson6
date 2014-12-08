@@ -21,5 +21,6 @@
     <string name="no_posts">This feed is not supported or there are no news</string>
     <string name="action_delete_feed">Delete one feed</string>
     <string name="click_to_delete">Click on feed to delete</string>
+    <string name="refresh_button">Refresh</string>
 
 </resources>

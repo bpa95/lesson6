@@ -51,14 +51,16 @@ public class MainActivity extends Activity implements AddFeedDialogFragment.Noti
         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
             Cursor o = ((Cursor) adapter.getItem(position));
             if (del) {
-                Uri uri = ContentUris.withAppendedId(Feed.SimpleFeed.CONTENT_URI, o.getLong(Feed.ID_COLUMN));
+                Uri uri = ContentUris.withAppendedId(Feed.SimpleFeed.CONTENT_URI,
+                        o.getLong(Feed.SimpleFeed.ID_COLUMN));
                 int cnt = getContentResolver().delete(uri, null, null);
                 del = false;
                 listView.setBackgroundColor(Color.WHITE);
                 Log.i("x", "delete, count = " + cnt);
             } else {
                 Intent feedViewIntent = new Intent(MainActivity.this, PostListActivity.class);
-                feedViewIntent.putExtra("link", o.getString(Feed.URL_COLUMN));
+                feedViewIntent.putExtra("feed_name", o.getString(Feed.SimpleFeed.TITLE_COLUMN));
+                feedViewIntent.putExtra("link", o.getString(Feed.SimpleFeed.URL_COLUMN));
                 startActivity(feedViewIntent);
             }
         }
@@ -124,7 +126,7 @@ public class MainActivity extends Activity implements AddFeedDialogFragment.Noti
     }
 
 
-    static final String[] CONTACTS_SUMMARY_PROJECTION = new String[] {
+    static final String[] SUMMARY_PROJECTION = new String[] {
             Feed.SimpleFeed._ID,
             Feed.SimpleFeed.TITLE_NAME,
             Feed.SimpleFeed.URL_NAME
@@ -138,7 +140,7 @@ public class MainActivity extends Activity implements AddFeedDialogFragment.Noti
 //                + Contacts.HAS_PHONE_NUMBER + "=1) AND ("
 //                + Contacts.DISPLAY_NAME + " != '' ))";
         return new CursorLoader(getBaseContext(), baseUri,
-                CONTACTS_SUMMARY_PROJECTION, null, null,
+                SUMMARY_PROJECTION, null, null,
                 null);
     }
 

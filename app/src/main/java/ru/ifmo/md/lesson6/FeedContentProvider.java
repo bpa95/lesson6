@@ -35,7 +35,7 @@ public class FeedContentProvider extends ContentProvider {
 
     private static class FeedsDbHelper extends SQLiteOpenHelper {
         private static final String DATABASE_NAME = SIMPLE_FEED + ".db";
-        private static int DATABASE_VERSION = 2;
+        private static int DATABASE_VERSION = 3;
 
         private FeedsDbHelper(Context context) {
             super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -43,16 +43,23 @@ public class FeedContentProvider extends ContentProvider {
 
         @Override
         public void onCreate(SQLiteDatabase sqLiteDatabase) {
-            createTable(sqLiteDatabase);
+            createTables(sqLiteDatabase);
         }
 
-        private void createTable(SQLiteDatabase sqLiteDatabase) {
+        private void createTables(SQLiteDatabase sqLiteDatabase) {
             String qs = "CREATE TABLE " + FEEDS_TABLE_NAME + " ("
                     + Feed.SimpleFeed._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
                     + Feed.SimpleFeed.TITLE_NAME + " TEXT, "
                     + Feed.SimpleFeed.URL_NAME + " TEXT" + ");";
             sqLiteDatabase.execSQL(qs);
             insertFeeds(sqLiteDatabase);
+            qs = "CREATE TABLE " + POSTS_TABLE_NAME + " ("
+                    + Feed.SimplePost._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
+                    + Feed.SimplePost.FEED_NAME + " TEXT, "
+                    + Feed.SimplePost.TITLE_NAME + " TEXT, "
+                    + Feed.SimplePost.DESCRIPTION_NAME + " TEXT, "
+                    + Feed.SimplePost.URL_NAME + " TEXT" + ");";
+            sqLiteDatabase.execSQL(qs);
         }
 
         private void insertFeeds(SQLiteDatabase sqLiteDatabase) {
@@ -65,7 +72,8 @@ public class FeedContentProvider extends ContentProvider {
         @Override
         public void onUpgrade(SQLiteDatabase sqLiteDatabase, int oldv, int newv) {
             sqLiteDatabase.execSQL("DROP TABLE IF EXISTS " + FEEDS_TABLE_NAME + ";");
-            createTable(sqLiteDatabase);
+            sqLiteDatabase.execSQL("DROP TABLE IF EXISTS " + POSTS_TABLE_NAME + ";");
+            createTables(sqLiteDatabase);
         }
     }
 
@@ -85,19 +93,33 @@ public class FeedContentProvider extends ContentProvider {
             case FEEDS:
                 affected = getDb().delete(FEEDS_TABLE_NAME,
                         (!TextUtils.isEmpty(selection) ?
-                                " AND (" + selection + ')' : ""),
+                                " (" + selection + ')' : ""),
                         selectionArgs);
                 break;
             case FEEDS_ID:
-                long videoId = ContentUris.parseId(uri);
+                long feedId = ContentUris.parseId(uri);
                 affected = getDb().delete(FEEDS_TABLE_NAME,
-                        Feed.SimpleFeed._ID + "=" + videoId
+                        Feed.SimpleFeed._ID + "=" + feedId
                                 + (!TextUtils.isEmpty(selection) ?
-                                " AND (" + selection + ')' : ""),
+                                " (" + selection + ')' : ""),
+                        selectionArgs);
+                break;
+            case POSTS:
+                affected = getDb().delete(POSTS_TABLE_NAME,
+                        (!TextUtils.isEmpty(selection) ?
+                                " (" + selection + ')' : ""),
+                        selectionArgs);
+                break;
+            case POSTS_ID:
+                long postId = ContentUris.parseId(uri);
+                affected = getDb().delete(POSTS_TABLE_NAME,
+                        Feed.SimplePost._ID + "=" + postId
+                                + (!TextUtils.isEmpty(selection) ?
+                                " (" + selection + ')' : ""),
                         selectionArgs);
                 break;
             default:
-                throw new IllegalArgumentException("unknown video element: " +
+                throw new IllegalArgumentException("unknown feed element: " +
                         uri);
         }
 
@@ -113,6 +135,10 @@ public class FeedContentProvider extends ContentProvider {
                 return Feed.SimpleFeed.CONTENT_TYPE;
             case FEEDS_ID:
                 return Feed.SimpleFeed.CONTENT_ITEM_TYPE;
+            case POSTS:
+                return Feed.SimplePost.CONTENT_TYPE;
+            case POSTS_ID:
+                return Feed.SimplePost.CONTENT_ITEM_TYPE;
             default:
                 throw new IllegalArgumentException("Unknown type: " + uri);
         }
@@ -121,7 +147,8 @@ public class FeedContentProvider extends ContentProvider {
     @Override
     public Uri insert(Uri uri, ContentValues initialValues) {
         Log.d(LOG_TAG, "insert, " + uri.toString());
-        if (uriMatcher.match(uri) != FEEDS) {
+        int u = uriMatcher.match(uri);
+        if (u != FEEDS && u != POSTS) {
             throw new IllegalArgumentException("Wrong URI: " + uri);
         }
 
@@ -133,11 +160,21 @@ public class FeedContentProvider extends ContentProvider {
         }
 
         db = getDb();
-        long rowID = db.insert(FEEDS_TABLE_NAME, null, values);
-        if (rowID > 0) {
-            Uri resultUri = ContentUris.withAppendedId(Feed.SimpleFeed.CONTENT_URI, rowID);
-            getContext().getContentResolver().notifyChange(resultUri, null);
-            return resultUri;
+
+        if (u == FEEDS) {
+            long rowID = db.insert(FEEDS_TABLE_NAME, null, values);
+            if (rowID > 0) {
+                Uri resultUri = ContentUris.withAppendedId(Feed.SimpleFeed.CONTENT_URI, rowID);
+                getContext().getContentResolver().notifyChange(resultUri, null);
+                return resultUri;
+            }
+        } else if (u == POSTS) {
+            long rowID = db.insert(POSTS_TABLE_NAME, null, values);
+            if (rowID > 0) {
+                Uri resultUri = ContentUris.withAppendedId(Feed.SimplePost.CONTENT_URI, rowID);
+                getContext().getContentResolver().notifyChange(resultUri, null);
+                return resultUri;
+            }
         }
 
         throw new SQLException("Failed to insert row into " + uri);
@@ -155,30 +192,56 @@ public class FeedContentProvider extends ContentProvider {
                         String[] selectionArgs, String sortOrder) {
         Log.d(LOG_TAG, "query, " + uri.toString());
 
+        String TABLE_NAME = "";
+        Uri CONTENT_URI;
         switch (uriMatcher.match(uri)) {
             case FEEDS:
-                Log.d(LOG_TAG, "URI_CONTACTS");
+                Log.d(LOG_TAG, "URI_FEEDS");
                 if (TextUtils.isEmpty(sortOrder)) {
                     sortOrder = Feed.SimpleFeed.TITLE_NAME + " ASC";
                 }
+                TABLE_NAME = FEEDS_TABLE_NAME;
+                CONTENT_URI = Feed.SimpleFeed.CONTENT_URI;
                 break;
-            case FEEDS_ID:
-                String id = uri.getLastPathSegment();
-                Log.d(LOG_TAG, "URI_CONTACTS_ID, " + id);
-                if (TextUtils.isEmpty(selection)) {
-                    selection = Feed.SimpleFeed._ID + " = " + id;
-                } else {
-                    selection = selection + " AND " + Feed.SimpleFeed._ID + " = " + id;
+            case FEEDS_ID: {
+                    String id = uri.getLastPathSegment();
+                    Log.d(LOG_TAG, "URI_FEEDS_ID, " + id);
+                    if (TextUtils.isEmpty(selection)) {
+                        selection = Feed.SimpleFeed._ID + " = " + id;
+                    } else {
+                        selection = selection + " AND " + Feed.SimpleFeed._ID + " = " + id;
+                    }
+                    TABLE_NAME = FEEDS_TABLE_NAME;
+                    CONTENT_URI = Feed.SimpleFeed.CONTENT_URI;
+                }
+                break;
+            case POSTS:
+                Log.d(LOG_TAG, "URI_POSTS");
+                if (TextUtils.isEmpty(sortOrder)) {
+                    sortOrder = Feed.SimplePost.TITLE_NAME + " ASC";
+                }
+                TABLE_NAME = POSTS_TABLE_NAME;
+                CONTENT_URI = Feed.SimplePost.CONTENT_URI;
+                break;
+            case POSTS_ID: {
+                    String id = uri.getLastPathSegment();
+                    Log.d(LOG_TAG, "URI_POSTS_ID, " + id);
+                    if (TextUtils.isEmpty(selection)) {
+                        selection = Feed.SimplePost._ID + " = " + id;
+                    } else {
+                        selection = selection + " AND " + Feed.SimplePost._ID + " = " + id;
+                    }
+                    TABLE_NAME = POSTS_TABLE_NAME;
+                    CONTENT_URI = Feed.SimplePost.CONTENT_URI;
                 }
                 break;
             default:
                 throw new IllegalArgumentException("Wrong URI: " + uri);
         }
-        db = dbHelper.getWritableDatabase();
-        Cursor cursor = db.query(FEEDS_TABLE_NAME, projection, selection,
+        db = getDb();
+        Cursor cursor = db.query(TABLE_NAME, projection, selection,
                 selectionArgs, null, null, sortOrder);
-        cursor.setNotificationUri(getContext().getContentResolver(),
-                Feed.SimpleFeed.CONTENT_URI);
+        cursor.setNotificationUri(getContext().getContentResolver(), CONTENT_URI);
         return cursor;
     }
 
@@ -192,7 +255,6 @@ public class FeedContentProvider extends ContentProvider {
                 affected = getDb().update(FEEDS_TABLE_NAME, values,
                         selection, selectionArgs);
                 break;
-
             case FEEDS_ID:
                 String feedId = uri.getPathSegments().get(1);
                 affected = getDb().update(FEEDS_TABLE_NAME, values,
@@ -201,7 +263,18 @@ public class FeedContentProvider extends ContentProvider {
                                 " AND (" + selection + ')' : ""),
                         selectionArgs);
                 break;
-
+            case POSTS:
+                affected = getDb().update(POSTS_TABLE_NAME, values,
+                        selection, selectionArgs);
+                break;
+            case POSTS_ID:
+                String postId = uri.getPathSegments().get(1);
+                affected = getDb().update(POSTS_TABLE_NAME, values,
+                        Feed.SimplePost._ID + "=" + postId
+                                + (!TextUtils.isEmpty(selection) ?
+                                " AND (" + selection + ')' : ""),
+                        selectionArgs);
+                break;
             default:
                 throw new IllegalArgumentException("Unknown URI " + uri);
         }
