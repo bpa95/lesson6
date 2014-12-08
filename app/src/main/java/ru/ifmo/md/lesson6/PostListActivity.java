@@ -25,7 +25,6 @@ import java.util.ArrayList;
 
 
 public class PostListActivity extends Activity implements LoaderManager.LoaderCallbacks<Cursor> {
-    private ArrayList<PostItem> posts = new ArrayList<PostItem>();
     private SimpleCursorAdapter adapter;
     private ListView listView;
     private String FEED_NAME;
@@ -58,9 +57,10 @@ public class PostListActivity extends Activity implements LoaderManager.LoaderCa
     }
 
     private void loadPosts() {
-        String feedLink = getIntent().getStringExtra("link");
-        RssDataController async = new RssDataController();
-        async.execute(feedLink);
+        Intent intent = new Intent(this, RSSPullService.class);
+        intent.putExtra("link", getIntent().getStringExtra("link"));
+        intent.putExtra("feed_name", FEED_NAME);
+        startService(intent);
     }
 
     private void refreshPosts() {
@@ -81,68 +81,6 @@ public class PostListActivity extends Activity implements LoaderManager.LoaderCa
 
     public void refreshButton(View view) {
         refreshPosts();
-    }
-
-    private class RssDataController extends AsyncTask<String, Integer, ArrayList<PostItem>> {
-        private String errorText = null;
-
-        @Override
-        protected ArrayList<PostItem> doInBackground(String... urls) {
-            ArrayList<PostItem> postItemList = null;
-            try {
-                URL url = new URL(urls[0]);
-                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-                connection.connect();
-
-                InputStream is = connection.getInputStream();
-
-                postItemList = SAXXMLParser.parse(is);
-            } catch (MalformedURLException e) {
-                errorText = getString(R.string.malformed_url);
-                e.printStackTrace();
-            } catch (IOException e) {
-                errorText = getString(R.string.check_internet);
-                e.printStackTrace();
-            } catch (Exception e) {
-                errorText = getString(R.string.unknown_error);
-                e.printStackTrace();
-            }
-
-            return postItemList;
-        }
-
-        @Override
-        protected void onPostExecute(ArrayList<PostItem> result) {
-            if (result == null || result.isEmpty()) {
-                if (errorText == null)
-                    errorText = getString(R.string.no_posts);
-            } else {
-                try {
-                    ContentValues cv = new ContentValues();
-                    for (PostItem aResult : result) {
-                        cv.clear();
-                        cv.put(Feed.SimplePost.FEED_NAME, FEED_NAME);
-                        cv.put(Feed.SimplePost.TITLE_NAME, aResult.getPostTitle());
-                        cv.put(Feed.SimplePost.DESCRIPTION_NAME, aResult.getPostDescription());
-                        cv.put(Feed.SimplePost.URL_NAME, aResult.getPostLink());
-                        getContentResolver().insert(Feed.SimplePost.CONTENT_URI, cv);
-                    }
-                } catch (Exception e) {
-                    if (errorText == null)
-                        errorText = getString(R.string.no_posts);
-                    e.printStackTrace();
-                }
-            }
-
-            if (errorText != null) {
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        showToast(errorText);
-                    }
-                });
-            }
-        }
     }
 
     static final String[] SUMMARY_PROJECTION = new String[] {

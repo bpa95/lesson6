@@ -1,55 +1,19 @@
 package ru.ifmo.md.lesson6;
 
 import android.app.IntentService;
+import android.content.ContentValues;
 import android.content.Intent;
-import android.content.Context;
 
-/**
- * An {@link IntentService} subclass for handling asynchronous task requests in
- * a service on a separate handler thread.
- * <p>
- * TODO: Customize class - update intent actions, extra parameters and static
- * helper methods.
- */
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.ArrayList;
+
 public class RSSPullService extends IntentService {
-    // TODO: Rename actions, choose action names that describe tasks that this
-    // IntentService can perform, e.g. ACTION_FETCH_NEW_ITEMS
-    private static final String ACTION_FOO = "ru.ifmo.md.lesson6.action.FOO";
-    private static final String ACTION_BAZ = "ru.ifmo.md.lesson6.action.BAZ";
-
-    // TODO: Rename parameters
-    private static final String EXTRA_PARAM1 = "ru.ifmo.md.lesson6.extra.PARAM1";
-    private static final String EXTRA_PARAM2 = "ru.ifmo.md.lesson6.extra.PARAM2";
-
-    /**
-     * Starts this service to perform action Foo with the given parameters. If
-     * the service is already performing a task this action will be queued.
-     *
-     * @see IntentService
-     */
-    // TODO: Customize helper method
-    public static void startActionFoo(Context context, String param1, String param2) {
-        Intent intent = new Intent(context, RSSPullService.class);
-        intent.setAction(ACTION_FOO);
-        intent.putExtra(EXTRA_PARAM1, param1);
-        intent.putExtra(EXTRA_PARAM2, param2);
-        context.startService(intent);
-    }
-
-    /**
-     * Starts this service to perform action Baz with the given parameters. If
-     * the service is already performing a task this action will be queued.
-     *
-     * @see IntentService
-     */
-    // TODO: Customize helper method
-    public static void startActionBaz(Context context, String param1, String param2) {
-        Intent intent = new Intent(context, RSSPullService.class);
-        intent.setAction(ACTION_BAZ);
-        intent.putExtra(EXTRA_PARAM1, param1);
-        intent.putExtra(EXTRA_PARAM2, param2);
-        context.startService(intent);
-    }
+    private static final String EXTRA_URL = "link";
+    private static final String EXTRA_FEED_NAME = "feed_name";
 
     public RSSPullService() {
         super("RSSPullService");
@@ -57,35 +21,47 @@ public class RSSPullService extends IntentService {
 
     @Override
     protected void onHandleIntent(Intent intent) {
-        if (intent != null) {
-            final String action = intent.getAction();
-            if (ACTION_FOO.equals(action)) {
-                final String param1 = intent.getStringExtra(EXTRA_PARAM1);
-                final String param2 = intent.getStringExtra(EXTRA_PARAM2);
-                handleActionFoo(param1, param2);
-            } else if (ACTION_BAZ.equals(action)) {
-                final String param1 = intent.getStringExtra(EXTRA_PARAM1);
-                final String param2 = intent.getStringExtra(EXTRA_PARAM2);
-                handleActionBaz(param1, param2);
+        String errorText = null;
+        String FEED_NAME = intent.getStringExtra(EXTRA_FEED_NAME);
+        ArrayList<PostItem> postItemList = null;
+        try {
+            URL url = new URL(intent.getStringExtra(EXTRA_URL));
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.connect();
+
+            InputStream is = connection.getInputStream();
+
+            postItemList = SAXXMLParser.parse(is);
+        } catch (MalformedURLException e) {
+            errorText = getString(R.string.malformed_url);
+            e.printStackTrace();
+        } catch (IOException e) {
+            errorText = getString(R.string.check_internet);
+            e.printStackTrace();
+        } catch (Exception e) {
+            errorText = getString(R.string.unknown_error);
+            e.printStackTrace();
+        }
+
+        if (postItemList == null || postItemList.isEmpty()) {
+            if (errorText == null)
+                errorText = getString(R.string.no_posts);
+        } else {
+            try {
+                ContentValues cv = new ContentValues();
+                for (PostItem aResult : postItemList) {
+                    cv.clear();
+                    cv.put(Feed.SimplePost.FEED_NAME, FEED_NAME);
+                    cv.put(Feed.SimplePost.TITLE_NAME, aResult.getPostTitle());
+                    cv.put(Feed.SimplePost.DESCRIPTION_NAME, aResult.getPostDescription());
+                    cv.put(Feed.SimplePost.URL_NAME, aResult.getPostLink());
+                    getContentResolver().insert(Feed.SimplePost.CONTENT_URI, cv);
+                }
+            } catch (Exception e) {
+                if (errorText == null)
+                    errorText = getString(R.string.no_posts);
+                e.printStackTrace();
             }
         }
-    }
-
-    /**
-     * Handle action Foo in the provided background thread with the provided
-     * parameters.
-     */
-    private void handleActionFoo(String param1, String param2) {
-        // TODO: Handle action Foo
-        throw new UnsupportedOperationException("Not yet implemented");
-    }
-
-    /**
-     * Handle action Baz in the provided background thread with the provided
-     * parameters.
-     */
-    private void handleActionBaz(String param1, String param2) {
-        // TODO: Handle action Baz
-        throw new UnsupportedOperationException("Not yet implemented");
     }
 }
