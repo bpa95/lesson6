@@ -33,4 +33,29 @@ public class Feed {
 
         public static final String URL_NAME = "url";
     }
+
+    public static final class SimplePost implements BaseColumns {
+        public static final String DEFAULT_SORT_ORDER = "modified ASC";
+
+        private SimplePost() {}
+
+        public static final Uri POST_URI = Uri.parse("content://" +
+                AUTHORITY + "/" + SimplePost.POST_NAME);
+
+        public static final Uri CONTENT_URI = POST_URI;
+
+        public static final String CONTENT_TYPE =
+                "vnd.android.cursor.dir/vnd.post.data";
+
+        public static final String CONTENT_ITEM_TYPE =
+                "vnd.android.cursor.item/vnd.post.data";
+
+        public static final String POST_NAME = "post";
+
+        public static final String TITLE_NAME = "title";
+
+        public static final String DESCRIPTION_NAME = "description";
+
+        public static final String URL_NAME = "url";
+    }
 }

@@ -2,16 +2,16 @@ package ru.ifmo.md.lesson6;
 
 import android.app.Activity;
 import android.app.DialogFragment;
-import android.content.ContentResolver;
+import android.app.LoaderManager;
 import android.content.ContentUris;
 import android.content.ContentValues;
+import android.content.CursorLoader;
 import android.content.Intent;
+import android.content.Loader;
 import android.database.Cursor;
-import android.database.CursorWrapper;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
-import android.provider.BaseColumns;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -21,34 +21,29 @@ import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
 import android.widget.Toast;
 
-import java.util.ArrayList;
 
-
-public class MainActivity extends Activity implements AddFeedDialogFragment.NoticeDialogListener {
-    private boolean del = false;
+public class MainActivity extends Activity implements AddFeedDialogFragment.NoticeDialogListener,
+        LoaderManager.LoaderCallbacks<Cursor> {
     private SimpleCursorAdapter adapter;
     private ListView listView;
-
-    final Uri CONTENT_URI = Feed.SimpleFeed.CONTENT_URI;
+    private boolean del = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        Cursor cursor = getContentResolver().query(CONTENT_URI, null, null,
-                null, null);
-        startManagingCursor(cursor);
-
         String from[] = { Feed.SimpleFeed.TITLE_NAME, Feed.SimpleFeed.URL_NAME };
         int to[] = { android.R.id.text1, android.R.id.text2 };
         adapter = new SimpleCursorAdapter(this,
-                android.R.layout.simple_list_item_2, cursor, from, to);
+                android.R.layout.simple_list_item_2, null, from, to);
 
         listView = (ListView) findViewById(R.id.feed_list);
         listView.setAdapter(adapter);
 
         listView.setOnItemClickListener(contentShower);
+
+        getLoaderManager().initLoader(0, null, this);
     }
 
     private AdapterView.OnItemClickListener contentShower = new AdapterView.OnItemClickListener() {
@@ -126,5 +121,34 @@ public class MainActivity extends Activity implements AddFeedDialogFragment.Noti
         } else {
             super.onBackPressed();
         }
+    }
+
+
+    static final String[] CONTACTS_SUMMARY_PROJECTION = new String[] {
+            Feed.SimpleFeed._ID,
+            Feed.SimpleFeed.TITLE_NAME,
+            Feed.SimpleFeed.URL_NAME
+    };
+
+    @Override
+    public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+        Uri baseUri = Feed.SimpleFeed.CONTENT_URI;
+
+//        String select = "((" + Contacts.DISPLAY_NAME + " NOTNULL) AND ("
+//                + Contacts.HAS_PHONE_NUMBER + "=1) AND ("
+//                + Contacts.DISPLAY_NAME + " != '' ))";
+        return new CursorLoader(getBaseContext(), baseUri,
+                CONTACTS_SUMMARY_PROJECTION, null, null,
+                null);
+    }
+
+    @Override
+    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+        adapter.swapCursor(data);
+    }
+
+    @Override
+    public void onLoaderReset(Loader<Cursor> loader) {
+        adapter.swapCursor(null);
     }
 }

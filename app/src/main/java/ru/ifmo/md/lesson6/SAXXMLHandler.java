@@ -51,7 +51,7 @@ public class SAXXMLHandler extends DefaultHandler {
     public void characters(char[] ch, int start, int length)
             throws SAXException {
         String content = new String(ch, start, length);
-        if (!content.isEmpty() && !content.matches("\\s*")) {
+        if (!content.isEmpty()) {
             switch (tempVal) {
                 case LINK:
                     tempItem.appPostLink(content);

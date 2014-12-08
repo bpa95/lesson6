@@ -1,6 +1,5 @@
 package ru.ifmo.md.lesson6;
 
-import android.app.Activity;
 import android.content.ContentProvider;
 import android.content.ContentUris;
 import android.content.ContentValues;
@@ -11,7 +10,6 @@ import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.net.Uri;
-import android.provider.BaseColumns;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -19,22 +17,27 @@ public class FeedContentProvider extends ContentProvider {
     private static final String LOG_TAG = "myLogs";
 
     public static final String SIMPLE_FEED = "simple_feed";
-    public static final String FEED_TABLE_NAME = "feeds";
+    public static final String FEEDS_TABLE_NAME = "feeds";
+    public static final String POSTS_TABLE_NAME = "posts";
 
     private static final int FEEDS = 1;
     private static final int FEEDS_ID = 2;
+    private static final int POSTS = 3;
+    private static final int POSTS_ID = 4;
     private static final UriMatcher uriMatcher;
     static {
         uriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
         uriMatcher.addURI(Feed.AUTHORITY, Feed.SimpleFeed.FEED_NAME, FEEDS);
         uriMatcher.addURI(Feed.AUTHORITY, Feed.SimpleFeed.FEED_NAME + "/#", FEEDS_ID);
+        uriMatcher.addURI(Feed.AUTHORITY, Feed.SimplePost.POST_NAME, POSTS);
+        uriMatcher.addURI(Feed.AUTHORITY, Feed.SimplePost.POST_NAME + "/#", POSTS_ID);
     }
 
-    private static class SimpleFeedDbHelper extends SQLiteOpenHelper {
+    private static class FeedsDbHelper extends SQLiteOpenHelper {
         private static final String DATABASE_NAME = SIMPLE_FEED + ".db";
         private static int DATABASE_VERSION = 2;
 
-        private  SimpleFeedDbHelper(Context context) {
+        private FeedsDbHelper(Context context) {
             super(context, DATABASE_NAME, null, DATABASE_VERSION);
         }
 
@@ -44,8 +47,8 @@ public class FeedContentProvider extends ContentProvider {
         }
 
         private void createTable(SQLiteDatabase sqLiteDatabase) {
-            String qs = "CREATE TABLE " + FEED_TABLE_NAME + " ("
-                    + BaseColumns._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
+            String qs = "CREATE TABLE " + FEEDS_TABLE_NAME + " ("
+                    + Feed.SimpleFeed._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
                     + Feed.SimpleFeed.TITLE_NAME + " TEXT, "
                     + Feed.SimpleFeed.URL_NAME + " TEXT" + ");";
             sqLiteDatabase.execSQL(qs);
@@ -56,19 +59,19 @@ public class FeedContentProvider extends ContentProvider {
             ContentValues cv = new ContentValues();
             cv.put(Feed.SimpleFeed.TITLE_NAME, "Bash");
             cv.put(Feed.SimpleFeed.URL_NAME, "http://bash.im/rss/");
-            sqLiteDatabase.insert(FEED_TABLE_NAME, null, cv);
+            sqLiteDatabase.insert(FEEDS_TABLE_NAME, null, cv);
         }
 
         @Override
         public void onUpgrade(SQLiteDatabase sqLiteDatabase, int oldv, int newv) {
-            sqLiteDatabase.execSQL("DROP TABLE IF EXISTS " + FEED_TABLE_NAME + ";");
+            sqLiteDatabase.execSQL("DROP TABLE IF EXISTS " + FEEDS_TABLE_NAME + ";");
             createTable(sqLiteDatabase);
         }
     }
 
     public FeedContentProvider() {}
 
-    private SimpleFeedDbHelper dbHelper;
+    private FeedsDbHelper dbHelper;
     private SQLiteDatabase db;
 
     @Override
@@ -80,15 +83,15 @@ public class FeedContentProvider extends ContentProvider {
 
         switch (match) {
             case FEEDS:
-                affected = getDb().delete(FEED_TABLE_NAME,
+                affected = getDb().delete(FEEDS_TABLE_NAME,
                         (!TextUtils.isEmpty(selection) ?
                                 " AND (" + selection + ')' : ""),
                         selectionArgs);
                 break;
             case FEEDS_ID:
                 long videoId = ContentUris.parseId(uri);
-                affected = getDb().delete(FEED_TABLE_NAME,
-                        BaseColumns._ID + "=" + videoId
+                affected = getDb().delete(FEEDS_TABLE_NAME,
+                        Feed.SimpleFeed._ID + "=" + videoId
                                 + (!TextUtils.isEmpty(selection) ?
                                 " AND (" + selection + ')' : ""),
                         selectionArgs);
@@ -130,7 +133,7 @@ public class FeedContentProvider extends ContentProvider {
         }
 
         db = getDb();
-        long rowID = db.insert(FEED_TABLE_NAME, null, values);
+        long rowID = db.insert(FEEDS_TABLE_NAME, null, values);
         if (rowID > 0) {
             Uri resultUri = ContentUris.withAppendedId(Feed.SimpleFeed.CONTENT_URI, rowID);
             getContext().getContentResolver().notifyChange(resultUri, null);
@@ -143,7 +146,7 @@ public class FeedContentProvider extends ContentProvider {
     @Override
     public boolean onCreate() {
         Log.d(LOG_TAG, "onCreate");
-        dbHelper = new SimpleFeedDbHelper(getContext());
+        dbHelper = new FeedsDbHelper(getContext());
         return true;
     }
 
@@ -163,16 +166,16 @@ public class FeedContentProvider extends ContentProvider {
                 String id = uri.getLastPathSegment();
                 Log.d(LOG_TAG, "URI_CONTACTS_ID, " + id);
                 if (TextUtils.isEmpty(selection)) {
-                    selection = BaseColumns._ID + " = " + id;
+                    selection = Feed.SimpleFeed._ID + " = " + id;
                 } else {
-                    selection = selection + " AND " + BaseColumns._ID + " = " + id;
+                    selection = selection + " AND " + Feed.SimpleFeed._ID + " = " + id;
                 }
                 break;
             default:
                 throw new IllegalArgumentException("Wrong URI: " + uri);
         }
         db = dbHelper.getWritableDatabase();
-        Cursor cursor = db.query(FEED_TABLE_NAME, projection, selection,
+        Cursor cursor = db.query(FEEDS_TABLE_NAME, projection, selection,
                 selectionArgs, null, null, sortOrder);
         cursor.setNotificationUri(getContext().getContentResolver(),
                 Feed.SimpleFeed.CONTENT_URI);
@@ -186,14 +189,14 @@ public class FeedContentProvider extends ContentProvider {
 
         switch (uriMatcher.match(uri)) {
             case FEEDS:
-                affected = getDb().update(FEED_TABLE_NAME, values,
+                affected = getDb().update(FEEDS_TABLE_NAME, values,
                         selection, selectionArgs);
                 break;
 
             case FEEDS_ID:
                 String feedId = uri.getPathSegments().get(1);
-                affected = getDb().update(FEED_TABLE_NAME, values,
-                        BaseColumns._ID + "=" + feedId
+                affected = getDb().update(FEEDS_TABLE_NAME, values,
+                        Feed.SimpleFeed._ID + "=" + feedId
                                 + (!TextUtils.isEmpty(selection) ?
                                 " AND (" + selection + ')' : ""),
                         selectionArgs);
