@@ -13,15 +13,15 @@ public class FeedItem {
         return feedTitle;
     }
 
-    public void setFeedTitle(String feedTitle) {
-        this.feedTitle = feedTitle;
-    }
-
-    public String getFeedLink() {
-        return feedLink;
-    }
-
-    public void setFeedLink(String feedLink) {
-        this.feedLink = feedLink;
-    }
+//    public void setFeedTitle(String feedTitle) {
+//        this.feedTitle = feedTitle;
+//    }
+//
+//    public String getFeedLink() {
+//        return feedLink;
+//    }
+//
+//    public void setFeedLink(String feedLink) {
+//        this.feedLink = feedLink;
+//    }
 }

@@ -71,7 +71,7 @@ public class SAXXMLHandler extends DefaultHandler {
 
     public void endElement(String uri, String localName, String qName)
             throws SAXException {
-        if (qName.equalsIgnoreCase("item")) {
+        if (qName.equalsIgnoreCase(ITEM)) {
             if (tempItem.getPostDescription() != null && tempItem.getPostTitle() != null)
                 posts.add(tempItem);
         } else {

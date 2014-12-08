@@ -12,7 +12,6 @@ import android.database.Cursor;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -53,14 +52,17 @@ public class MainActivity extends Activity implements AddFeedDialogFragment.Noti
             if (del) {
                 Uri uri = ContentUris.withAppendedId(Feed.SimpleFeed.CONTENT_URI,
                         o.getLong(Feed.SimpleFeed.ID_COLUMN));
-                int cnt = getContentResolver().delete(uri, null, null);
+                //int cnt =
+                getContentResolver().delete(uri, null, null);
                 del = false;
                 listView.setBackgroundColor(Color.WHITE);
-                Log.i("x", "delete, count = " + cnt);
+                //Log.i("x", "delete, count = " + cnt);
             } else {
                 Intent feedViewIntent = new Intent(MainActivity.this, PostListActivity.class);
-                feedViewIntent.putExtra("feed_name", o.getString(Feed.SimpleFeed.TITLE_COLUMN));
-                feedViewIntent.putExtra("link", o.getString(Feed.SimpleFeed.URL_COLUMN));
+                feedViewIntent.putExtra(PostListActivity.EXTRA_FEED_NAME,
+                        o.getString(Feed.SimpleFeed.TITLE_COLUMN));
+                feedViewIntent.putExtra(PostListActivity.EXTRA_LINK,
+                        o.getString(Feed.SimpleFeed.URL_COLUMN));
                 startActivity(feedViewIntent);
             }
         }
@@ -136,9 +138,6 @@ public class MainActivity extends Activity implements AddFeedDialogFragment.Noti
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
         Uri baseUri = Feed.SimpleFeed.CONTENT_URI;
 
-//        String select = "((" + Contacts.DISPLAY_NAME + " NOTNULL) AND ("
-//                + Contacts.HAS_PHONE_NUMBER + "=1) AND ("
-//                + Contacts.DISPLAY_NAME + " != '' ))";
         return new CursorLoader(getBaseContext(), baseUri,
                 SUMMARY_PROJECTION, null, null,
                 null);

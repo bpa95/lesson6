@@ -11,10 +11,9 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.net.Uri;
 import android.text.TextUtils;
-import android.util.Log;
 
 public class FeedContentProvider extends ContentProvider {
-    private static final String LOG_TAG = "myLogs";
+    //private static final String LOG_TAG = "myLogs";
 
     public static final String SIMPLE_FEED = "simple_feed";
     public static final String FEEDS_TABLE_NAME = "feeds";
@@ -84,7 +83,7 @@ public class FeedContentProvider extends ContentProvider {
 
     @Override
     public int delete(Uri uri, String selection, String[] selectionArgs) {
-        Log.d(LOG_TAG, "delete, " + uri.toString());
+        //Log.d(LOG_TAG, "delete, " + uri.toString());
 
         int match = uriMatcher.match(uri);
         int affected;
@@ -129,7 +128,7 @@ public class FeedContentProvider extends ContentProvider {
 
     @Override
     public String getType(Uri uri) {
-        Log.d(LOG_TAG, "getType, " + uri.toString());
+        //Log.d(LOG_TAG, "getType, " + uri.toString());
         switch (uriMatcher.match(uri)) {
             case FEEDS:
                 return Feed.SimpleFeed.CONTENT_TYPE;
@@ -146,7 +145,7 @@ public class FeedContentProvider extends ContentProvider {
 
     @Override
     public Uri insert(Uri uri, ContentValues initialValues) {
-        Log.d(LOG_TAG, "insert, " + uri.toString());
+        //Log.d(LOG_TAG, "insert, " + uri.toString());
         int u = uriMatcher.match(uri);
         if (u != FEEDS && u != POSTS) {
             throw new IllegalArgumentException("Wrong URI: " + uri);
@@ -182,7 +181,7 @@ public class FeedContentProvider extends ContentProvider {
 
     @Override
     public boolean onCreate() {
-        Log.d(LOG_TAG, "onCreate");
+        //Log.d(LOG_TAG, "onCreate");
         dbHelper = new FeedsDbHelper(getContext());
         return true;
     }
@@ -190,13 +189,13 @@ public class FeedContentProvider extends ContentProvider {
     @Override
     public Cursor query(Uri uri, String[] projection, String selection,
                         String[] selectionArgs, String sortOrder) {
-        Log.d(LOG_TAG, "query, " + uri.toString());
+        //Log.d(LOG_TAG, "query, " + uri.toString());
 
-        String TABLE_NAME = "";
+        String TABLE_NAME;
         Uri CONTENT_URI;
         switch (uriMatcher.match(uri)) {
             case FEEDS:
-                Log.d(LOG_TAG, "URI_FEEDS");
+                //Log.d(LOG_TAG, "URI_FEEDS");
                 if (TextUtils.isEmpty(sortOrder)) {
                     sortOrder = Feed.SimpleFeed.TITLE_NAME + " ASC";
                 }
@@ -205,7 +204,7 @@ public class FeedContentProvider extends ContentProvider {
                 break;
             case FEEDS_ID: {
                     String id = uri.getLastPathSegment();
-                    Log.d(LOG_TAG, "URI_FEEDS_ID, " + id);
+                    //Log.d(LOG_TAG, "URI_FEEDS_ID, " + id);
                     if (TextUtils.isEmpty(selection)) {
                         selection = Feed.SimpleFeed._ID + " = " + id;
                     } else {
@@ -216,7 +215,7 @@ public class FeedContentProvider extends ContentProvider {
                 }
                 break;
             case POSTS:
-                Log.d(LOG_TAG, "URI_POSTS");
+                //Log.d(LOG_TAG, "URI_POSTS");
                 if (TextUtils.isEmpty(sortOrder)) {
                     sortOrder = Feed.SimplePost.TITLE_NAME + " ASC";
                 }
@@ -225,7 +224,7 @@ public class FeedContentProvider extends ContentProvider {
                 break;
             case POSTS_ID: {
                     String id = uri.getLastPathSegment();
-                    Log.d(LOG_TAG, "URI_POSTS_ID, " + id);
+                    //Log.d(LOG_TAG, "URI_POSTS_ID, " + id);
                     if (TextUtils.isEmpty(selection)) {
                         selection = Feed.SimplePost._ID + " = " + id;
                     } else {

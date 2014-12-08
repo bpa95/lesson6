@@ -13,6 +13,7 @@
         android:layout_height="wrap_content"
         android:text="@string/refresh_button"
         android:onClick="refreshButton"
+        android:id="@+id/refresh_button"
         android:background="@drawable/refresh_button" />
 
     <ListView

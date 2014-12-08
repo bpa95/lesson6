@@ -3,6 +3,8 @@ package ru.ifmo.md.lesson6;
 import android.app.IntentService;
 import android.content.ContentValues;
 import android.content.Intent;
+import android.os.Handler;
+import android.widget.Toast;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -12,8 +14,9 @@ import java.net.URL;
 import java.util.ArrayList;
 
 public class RSSPullService extends IntentService {
-    private static final String EXTRA_URL = "link";
-    private static final String EXTRA_FEED_NAME = "feed_name";
+    public static final String EXTRA_URL = "link";
+    public static final String EXTRA_FEED_NAME = "feed_name";
+    private Handler handler = new Handler();
 
     public RSSPullService() {
         super("RSSPullService");
@@ -58,10 +61,25 @@ public class RSSPullService extends IntentService {
                     getContentResolver().insert(Feed.SimplePost.CONTENT_URI, cv);
                 }
             } catch (Exception e) {
-                if (errorText == null)
-                    errorText = getString(R.string.no_posts);
+                errorText = getString(R.string.no_posts);
                 e.printStackTrace();
             }
         }
+
+        if (errorText != null) {
+            showToast(errorText);
+        }
+    }
+
+    private void showToast(final String text) {
+        handler.post(new Runnable() {
+            @Override
+            public void run() {
+                Toast.makeText(RSSPullService.this,
+                        text,
+                        Toast.LENGTH_SHORT)
+                        .show();
+            }
+        });
     }
 }

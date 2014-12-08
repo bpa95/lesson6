@@ -5,19 +5,8 @@ public class PostItem {
     private String postTitle = null;
     private String postDate = null;
     private String postDescription = null;
-    private boolean er = false;
 
     public PostItem() {
-    }
-
-    //use only for errors
-    public PostItem(String title) {
-        postTitle = title;
-        er = true;
-    }
-
-    public boolean isError() {
-        return er;
     }
 
     public String getPostTitle() {
@@ -36,9 +25,9 @@ public class PostItem {
         this.postLink = postLink;
     }
 
-    public String getPostDate() {
-        return postDate;
-    }
+//    public String getPostDate() {
+//        return postDate;
+//    }
 
     public void setPostDate(String postDate) {
         this.postDate = postDate;

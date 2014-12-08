@@ -12,8 +12,6 @@ public class Feed {
         public static final int TITLE_COLUMN = 1;
         public static final int URL_COLUMN = 2;
 
-        public static final String DEFAULT_SORT_ORDER = "modified ASC";
-
         private SimpleFeed() {}
 
         public static final Uri FEED_URI = Uri.parse("content://" +
@@ -40,8 +38,6 @@ public class Feed {
         public static final int TITLE_COLUMN = 2;
         public static final int DESCRIPTION_COLUMN = 3;
         public static final int URL_COLUMN = 4;
-
-        public static final String DEFAULT_SORT_ORDER = "modified ASC";
 
         private SimplePost() {}
 
