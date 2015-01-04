@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">RSSreader</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="action_add_feed">Add feed</string>
+    <string name="title_activity_post_view">Post</string>
+
+    <string name="bbc_feed_title">BBC</string>
+    <string name="bbc_feed_url">http://feeds.bbci.co.uk/news/rss.xml</string>
+    <string name="echo_msk_feed_title">Echo MSK</string>
+    <string name="echo_msk_feed_url">http://echo.msk.ru/interview/rss-fulltext.xml</string>
+    
+    <string name="title_activity_main">Feeds</string>
+    <string name="add">Add</string>
+    <string name="cancel">Cancel</string>
+    <string name="dialog_add_feed_title">Add feed</string>
+    <string name="add_title">Title</string>
+    <string name="add_url">Feed URL</string>
+    <string name="empty_title">Empty title</string>
+    <string name="empty_url">Empty URL</string>
+    <string name="malformed_url">URL is incorrect</string>
+    <string name="check_internet">Check your internet connection</string>
+    <string name="unsupported_rss">This feed is not supported</string>
+    <string name="unknown_error">Unknown error occured</string>
+    <string name="no_posts">This feed is not supported or there are no news</string>
+    <string name="action_delete_feed">Delete one feed</string>
+    <string name="click_to_delete">Click on feed to delete</string>
+    <string name="refresh_button">Refresh</string>
+
+</resources>
